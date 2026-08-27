@@ -1,0 +1,19 @@
+{
+  "discord_webhook_url": "https://discord.com/api/webhooks/PUT/YOUR/WEBHOOK/HERE",
+  "check_interval_seconds": 120,
+  "headless": true,
+  "targets": [
+    {
+      "name": "Example: Friday night show",
+      "platforms": ["bookmyshow", "district"],
+      "title": "Avatar 3",
+      "city": "Delhi NCR",
+      "venue_contains": null,
+      "date_range": { "start": "2026-09-01", "end": "2026-09-07" },
+      "time_range": { "start": "18:00", "end": "23:59" },
+      "seats": ["F12", "F13"],
+      "seat_match": "all",
+      "alert_on_listing": true
+    }
+  ]
+}
