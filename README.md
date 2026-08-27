@@ -58,13 +58,17 @@ pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
-Copy the example config and fill in your real values:
+Then add a show to watch with the interactive setup wizard — it asks for
+your webhook URL (first run only), title, city, date range, favorite seats,
+etc., and writes/updates `config.json` for you:
 
 ```bash
-copy config.example.json config.json
+python src/setup_target.py
 ```
 
-Edit `config.json`:
+Run it again any time to add another show to watch (it appends to
+`targets[]`). To edit an existing target, or set things up non-interactively,
+edit `config.json` directly — see `config.example.json` for the full schema:
 
 - `discord_webhook_url` — Discord → Server Settings → Integrations →
   Webhooks → New Webhook → Copy URL.
