@@ -53,7 +53,11 @@ def run_once(config: Config, state: State, debug: bool = False) -> None:
                         try:
                             send_discord(
                                 config.discord_webhook_url,
-                                f"🎬 **{target.name}** is now bookable on **{platform}**!\n{session.url}",
+                                (
+                                    f"🎬 **{target.name}** is now bookable on **{platform}**!\n"
+                                    f"{session.venue} — {session.show_date} {session.show_time}\n"
+                                    f"{session.url}"
+                                ),
                                 session.screenshot,
                             )
                             state.notified_listings.add(listing_key)

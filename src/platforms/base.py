@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import time as _time
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, time as dtime
 from pathlib import Path
 
 from playwright.sync_api import Page
@@ -114,3 +114,14 @@ def dismiss_modals(page: Page, attempts: int = 3) -> None:
 
 def normalize_seat_label(label: str) -> str:
     return re.sub(r"\s+", "", label).upper()
+
+
+def parse_showtime_text(text: str) -> dtime | None:
+    """Parse a showtime label like '07:30 PM' or '7:30PM' into a time object."""
+    m = re.search(r"(\d{1,2}):(\d{2})\s?(AM|PM)", text, re.I)
+    if not m:
+        return None
+    try:
+        return datetime.strptime(f"{m.group(1)}:{m.group(2)} {m.group(3).upper()}", "%I:%M %p").time()
+    except ValueError:
+        return None
