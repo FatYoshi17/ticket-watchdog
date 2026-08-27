@@ -2,7 +2,18 @@
 
 Watches BookMyShow and District for a specific movie/event to become bookable
 in a given city and date range, and pings a Discord webhook the moment it
-finds your seats (or, at minimum, the moment booking opens at all).
+finds your seats (or, at minimum, the moment booking opens at all). Works
+fine for upcoming/unreleased movies too — if the title isn't listed yet, it
+just keeps quietly checking until it appears.
+
+Two ways to add a show to watch:
+- **CLI wizard** (`src/setup_target.py`) — you run it on your own machine.
+- **Discord bot** (`src/bot.py`) — anyone in your server can add/list/remove
+  watches with `/watch`, `/watches`, `/unwatch` slash commands, no need to
+  touch the machine running it.
+
+Both write to the same `config.json`, and the same polling logic (`watcher.py`)
+checks everything in it — you can use either one, or both together.
 
 ## Tested status (as of building this)
 
@@ -96,7 +107,51 @@ HTML for that site.
 
 Once it's behaving, set `"headless": true` for normal unattended runs.
 
+## Discord bot: let people submit watch requests with slash commands
+
+Instead of (or in addition to) the CLI wizard, run a real Discord bot so
+anyone in your server can register a watch themselves.
+
+1. Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+   → New Application → name it (e.g. "Ticket Watchdog").
+2. Bot tab → Reset Token → copy it. Put it in `config.json` as
+   `discord_bot_token`. **Treat this like a password** — anyone with it can
+   control the bot as if they were you.
+3. OAuth2 → URL Generator → scopes: `bot`, `applications.commands` →
+   bot permissions: `Send Messages`, `Attach Files` → open the generated
+   URL and invite it to your server.
+4. (Optional but recommended for testing) Right-click your server → Copy
+   Server ID (enable Developer Mode in Discord settings first if needed) →
+   put it in `config.json` as `discord_guild_id`. This makes slash commands
+   appear instantly; without it, Discord can take up to an hour to propagate
+   them globally.
+5. Run it:
+
+```bash
+python src/bot.py
+```
+
+Then in your server:
+
+- `/watch name:friday-avatar title:"Avatar 3" city:"Delhi NCR" seats:F12,F13 date_start:2026-09-01 date_end:2026-09-07 seat_match:"all seats must be free" platforms:"District only"`
+- `/watches` — list everything currently being watched
+- `/unwatch name:friday-avatar` — stop watching it
+
+The bot itself only *registers* watches; alerts still go out through the
+webhook configured in `discord_webhook_url`, checked on the interval set by
+`check_interval_seconds` (minimum 60s) — same underlying logic as running
+`watcher.py` on a schedule, just driven by chat instead of editing JSON.
+
 ## Running it continuously (near real-time, on your PC)
+
+**If you're using the Discord bot** (`src/bot.py`), it already polls
+internally in a background loop as long as the process is running — just
+keep it running (e.g. in a terminal window, or registered to start at
+login via Task Scheduler with no repetition trigger). No separate
+scheduling needed.
+
+**If you're only using `watcher.py`** (CLI wizard, no bot commands), use
+Task Scheduler to re-run it periodically:
 
 ```powershell
 .\scripts\register_task_scheduler.ps1 -IntervalMinutes 2

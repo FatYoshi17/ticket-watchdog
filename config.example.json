@@ -1,5 +1,7 @@
 {
   "discord_webhook_url": "https://discord.com/api/webhooks/PUT/YOUR/WEBHOOK/HERE",
+  "discord_bot_token": "PUT_YOUR_BOT_TOKEN_HERE_OR_OMIT_IF_NOT_USING_BOT_COMMANDS",
+  "discord_guild_id": null,
   "check_interval_seconds": 120,
   "headless": true,
   "targets": [
