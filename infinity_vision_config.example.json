@@ -1,0 +1,10 @@
+{
+  "discord_webhook_url": "https://discord.com/api/webhooks/PUT/YOUR/WEBHOOK/HERE",
+  "lat": 28.7041,
+  "lon": 77.1025,
+  "radius_km": 160,
+  "movies": [
+    { "name": "Avengers: Doomsday", "movie_id": "617dc132-b748-4f70-876f-cdf1d1ea9854" },
+    { "name": "Avengers Endgame: Encore", "movie_id": "4ad148cb-7030-4d27-bf0b-23b6544ac3db" }
+  ]
+}

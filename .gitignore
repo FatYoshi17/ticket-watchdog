@@ -6,3 +6,8 @@ config.json
 state.json
 debug/
 .env
+infinity_vision_config.json
+infinity_vision_log.json
+district_iv_config.json
+district_iv_log.json
+*.xlsx
