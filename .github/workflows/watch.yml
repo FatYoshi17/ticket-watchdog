@@ -1,0 +1,54 @@
+name: watch
+
+on:
+  schedule:
+    # A run takes ~3-5 min. Private repos get 2000 free min/month, which
+    # only fits roughly one run every 2 hours; public repos are unlimited,
+    # so "*/15 * * * *" is fine there. GitHub may also delay cron runs.
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: watch
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - uses: actions/cache@v4
+        id: pw-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: python -m playwright install --with-deps chromium
+
+      - if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: python -m playwright install-deps chromium
+
+      - name: Run watcher
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python src/watcher.py --config config.cloud.json --state state.cloud.json
+
+      - name: Save alert state so we don't re-alert next run
+        run: |
+          git config user.name "ticket-watchdog[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add state.cloud.json
+          git diff --cached --quiet || (git commit -m "Update watcher state [skip ci]" && git push)

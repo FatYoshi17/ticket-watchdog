@@ -172,3 +172,22 @@ Unregister-ScheduledTask -TaskName TicketWatchdog -Confirm:$false
 
 `state.json` remembers what's already been alerted so you don't get pinged
 every single run once a show is live. Delete it to reset.
+
+## Hosting it in the cloud (GitHub Actions, no PC needed)
+
+`.github/workflows/watch.yml` runs `watcher.py` on a schedule on GitHub's
+servers. It reads targets from `config.cloud.json` (committed, no secrets),
+takes the webhook from a GitHub secret, and commits `state.cloud.json` back
+so you aren't re-alerted every run.
+
+1. Repo -> Settings -> Secrets and variables -> Actions -> New secret:
+   `DISCORD_WEBHOOK_URL` = your webhook URL.
+2. Edit `config.cloud.json`: replace the `smoke-test-toxic` target with your
+   real watches (same fields as `config.example.json`).
+3. Actions tab -> `watch` -> Run workflow, and check the log + your Discord.
+4. Schedule is in the workflow's `cron:`. Private repo free tier fits about
+   one run every 2 hours; a public repo can run every 10-15 min for free.
+
+Limits: Actions can't host the `/watch` slash-command bot (that needs an
+always-on process), and `/watch` only edits the local `config.json`. Run
+`bot.py` on a VPS/always-on box if you want commands without your PC.

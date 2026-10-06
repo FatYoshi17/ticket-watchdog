@@ -1,0 +1,18 @@
+{
+  "check_interval_seconds": 120,
+  "headless": true,
+  "targets": [
+    {
+      "name": "smoke-test-toxic",
+      "platforms": ["district"],
+      "title": "Toxic",
+      "city": "Gurugram",
+      "venue_contains": null,
+      "date_range": { "start": "2026-10-06", "end": "2026-10-20" },
+      "time_range": null,
+      "seats": ["A1"],
+      "seat_match": "any",
+      "alert_on_listing": true
+    }
+  ]
+}

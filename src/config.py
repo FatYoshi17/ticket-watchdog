@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import date, time
 from pathlib import Path
@@ -94,11 +95,11 @@ def load_config(path: str | Path) -> Config:
         )
 
     return Config(
-        discord_webhook_url=raw["discord_webhook_url"],
+        discord_webhook_url=os.environ.get("DISCORD_WEBHOOK_URL") or raw.get("discord_webhook_url", ""),
         targets=targets,
         check_interval_seconds=raw.get("check_interval_seconds", 120),
         headless=raw.get("headless", True),
-        discord_bot_token=raw.get("discord_bot_token"),
+        discord_bot_token=os.environ.get("DISCORD_BOT_TOKEN") or raw.get("discord_bot_token"),
         discord_guild_id=raw.get("discord_guild_id"),
     )
 
