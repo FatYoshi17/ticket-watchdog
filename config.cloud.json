@@ -3,7 +3,7 @@
   "headless": true,
   "targets": [
     {
-      "name": "smoke-test-toxic",
+      "name": "smoke-test",
       "platforms": ["district"],
       "title": "Drishyam: The Conclusion",
       "city": "Gurugram",
