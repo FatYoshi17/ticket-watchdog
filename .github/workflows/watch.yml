@@ -2,10 +2,10 @@ name: watch
 
 on:
   schedule:
-    # A run takes ~3-5 min. Private repos get 2000 free min/month, which
-    # only fits roughly one run every 2 hours; public repos are unlimited,
-    # so "*/15 * * * *" is fine there. GitHub may also delay cron runs.
-    - cron: "17 */2 * * *"
+    # Public repo = free unlimited minutes, so every 15 min is fine. A run takes
+    # ~3-5 min. If the repo goes private, 2000 free min/month only fits about
+    # one run every 2 hours ("17 */2 * * *"). GitHub may delay cron runs.
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 concurrency:
