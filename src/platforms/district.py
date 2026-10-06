@@ -9,11 +9,10 @@ from config import Target
 from platforms.base import (
     PlatformBlocked,
     SessionMatch,
-    classify_seat_element,
     dismiss_modals,
     dump_debug,
     looks_like_challenge,
-    normalize_seat_label,
+    parse_seat_label,
     parse_showtime_text,
     polite_wait,
 )
@@ -49,20 +48,28 @@ def _set_city(context: BrowserContext, city: str) -> None:
         page.close()
 
 
+def _title_tokens(title: str) -> list[str]:
+    return [w for w in re.findall(r"[a-z0-9]+", title.lower()) if len(w) > 1 or w.isdigit()]
+
+
 def _search_movie(context: BrowserContext, title: str) -> str | None:
+    """First search result whose URL slug contains every word of `title`.
+    (Taking the plain first result returned an unrelated trending movie
+    whenever the title wasn't listed -- a false "bookable" alert.)"""
+    tokens = _title_tokens(title)
     page = context.new_page()
     try:
         page.goto(f"{BASE_URL}/search?query={title}", wait_until="domcontentloaded", timeout=30000)
         polite_wait(2.0)
         if looks_like_challenge(page):
             raise PlatformBlocked("district search blocked by a challenge page")
-        link = page.locator(f'a[href*="movie-tickets-"]').first
-        if link.count() == 0:
-            return None
-        href = link.get_attribute("href")
-        if href and href.startswith("/"):
-            href = BASE_URL + href
-        return href
+        links = page.locator('a[href*="movie-tickets-"]')
+        for i in range(links.count()):
+            href = links.nth(i).get_attribute("href") or ""
+            slug = href.split("/movies/")[-1].split("-movie-tickets")[0].lower().replace("-", "")
+            if tokens and all(tok in slug for tok in tokens):
+                return BASE_URL + href if href.startswith("/") else href
+        return None
     finally:
         page.close()
 
@@ -112,11 +119,39 @@ def _venue_positions(page: Page) -> list[tuple[float, str]]:
 def _venue_for_y(y: float, venues: list[tuple[float, str]]) -> str:
     best = "(unknown venue)"
     for vy, name in venues:
-        if vy <= y:
+        if vy <= y + 40:  # name block can start slightly below the time buttons
             best = name
         else:
             break
     return best
+
+
+def _read_available_seats(page: Page) -> set[tuple[str, int]] | None:
+    """Seats on District's seat map are spans with aria-label like
+    'available seat, class PREMIUM XL, row J, column 8, price 320' and the
+    number printed on the seat (what people mean by "J15") in the span's
+    text -- the aria 'column' is only an internal index. Returns the set of
+    (ROW, printed_number) that are available, or None if no seat map loaded."""
+    try:
+        page.wait_for_selector('[aria-label*="seat, class"]', timeout=8000)
+    except Exception:
+        return None
+    items = page.eval_on_selector_all(
+        '[aria-label*="seat, class"]',
+        "els => els.map(e => ({a: e.getAttribute('aria-label') || '', t: (e.innerText || '').trim()}))",
+    )
+    if not items:
+        return None
+    free: set[tuple[str, int]] = set()
+    for it in items:
+        a = it["a"].strip().lower()
+        if not a.startswith("available"):
+            continue
+        row = re.search(r"row ([a-z]+)", a)
+        num = re.search(r"\d+", it["t"])
+        if row and num:
+            free.add((row.group(1).upper(), int(num.group(0))))
+    return free
 
 
 def _check_showtimes_on_current_page(
@@ -153,7 +188,7 @@ def _check_showtimes_on_current_page(
 
             checked += 1
             btn.click(timeout=3000)
-            polite_wait(2.0)
+            polite_wait(1.5)
             dismiss_modals(page)
 
             screenshot = dump_debug(page, f"district_seatmap_{show_date}_{checked}") if debug else None
@@ -167,19 +202,12 @@ def _check_showtimes_on_current_page(
                 seat_status={},
                 screenshot=screenshot,
             )
-            try:
+            free = _read_available_seats(page)
+            if free is not None:
                 for seat in target.seats:
-                    norm = normalize_seat_label(seat)
-                    el = page.get_by_text(re.compile(rf"^\s*{re.escape(norm)}\s*$", re.I)).first
-                    if el.count() == 0:
-                        continue
-                    classes = el.get_attribute("class") or ""
-                    attrs = (el.get_attribute("aria-label") or "") + (el.get_attribute("title") or "")
-                    status = classify_seat_element("", classes, attrs)
-                    if status is not None:
-                        match.seat_status[seat] = status
-            except Exception:
-                pass
+                    parsed = parse_seat_label(seat)
+                    if parsed:
+                        match.seat_status[seat] = parsed in free
 
             matches.append(match)
             page.go_back(timeout=5000)

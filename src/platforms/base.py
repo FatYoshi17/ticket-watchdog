@@ -84,6 +84,7 @@ MODAL_DISMISS_TEXTS = [
     "proceed",
     "confirm and proceed",
     "continue",
+    "continue booking",
     "i agree",
     "accept",
     "got it",
@@ -125,3 +126,9 @@ def parse_showtime_text(text: str) -> dtime | None:
         return datetime.strptime(f"{m.group(1)}:{m.group(2)} {m.group(3).upper()}", "%I:%M %p").time()
     except ValueError:
         return None
+
+
+def parse_seat_label(label: str) -> tuple[str, int] | None:
+    """'F12' / 'f-12' / 'F 12' -> ('F', 12). Returns None if not that shape."""
+    m = re.match(r"^\s*([A-Za-z]{1,2})\s*-?\s*(\d{1,3})\s*$", label)
+    return (m.group(1).upper(), int(m.group(2))) if m else None

@@ -5,12 +5,12 @@
     {
       "name": "smoke-test-toxic",
       "platforms": ["district"],
-      "title": "Toxic",
+      "title": "Drishyam: The Conclusion",
       "city": "Gurugram",
       "venue_contains": null,
       "date_range": { "start": "2026-10-06", "end": "2026-10-20" },
       "time_range": null,
-      "seats": ["A1"],
+      "seats": ["J15"],
       "seat_match": "any",
       "alert_on_listing": true
     }

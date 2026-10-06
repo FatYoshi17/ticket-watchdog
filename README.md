@@ -59,6 +59,14 @@ checks everything in it — you can use either one, or both together.
   signal; treat seat-level status as a bonus, and double check the link
   yourself immediately when you get any alert.
 
+## Seat format
+
+On District, write seats as the **row letter + the number printed on the
+seat** (e.g. `J15`, `F12`) -- not the internal column index. A seat counts
+as free only if an *available* seat with that row and printed number exists
+on the seat map. Seat checking is District-only; BookMyShow is blocked by
+Cloudflare, so it never reaches a seat map.
+
 ## Setup
 
 ```bash
